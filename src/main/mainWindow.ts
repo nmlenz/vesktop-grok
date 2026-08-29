@@ -26,6 +26,7 @@ import { initArRPC } from "./arrpc";
 import { CommandLine } from "./cli";
 import { BrowserUserAgent, DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH } from "./constants";
 import { AppEvents } from "./events";
+import { initGrokBot } from "./grokBot";
 import { sendRendererCommand } from "./ipcCommands";
 import { darwinURL } from "./main";
 import { Settings, State, VencordSettings } from "./settings";
@@ -515,4 +516,5 @@ export async function createWindows() {
 
     mainWin.webContents.on("render-process-gone", (event, details) => console.log(details));
     initArRPC();
+    initGrokBot();
 }

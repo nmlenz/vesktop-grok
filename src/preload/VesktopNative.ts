@@ -7,6 +7,7 @@
 import type { Node } from "@vencord/venmic";
 import { ipcRenderer } from "electron/renderer";
 import type { IpcMessage, IpcResponse } from "main/ipcCommands";
+import type { GrokBotStatus, GrokChatRequest, GrokChatResult } from "shared/grokBot";
 import type { Settings } from "shared/settings";
 
 import { IpcEvents } from "../shared/IpcEvents";
@@ -107,5 +108,11 @@ export const VesktopNative = {
             ipcRenderer.on(IpcEvents.IPC_COMMAND, (_, message) => cb(message));
         },
         respond: (response: IpcResponse) => ipcRenderer.send(IpcEvents.IPC_COMMAND, response)
+    },
+    grokBot: {
+        status: () => invoke<GrokBotStatus>(IpcEvents.GROK_BOT_STATUS),
+        regenerateToken: () => invoke<string>(IpcEvents.GROK_BOT_REGENERATE_TOKEN),
+        chat: (request: GrokChatRequest) => invoke<GrokChatResult>(IpcEvents.GROK_CHAT, request),
+        test: () => invoke<GrokChatResult>(IpcEvents.GROK_CHAT_TEST)
     }
 };

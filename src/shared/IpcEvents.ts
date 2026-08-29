@@ -61,7 +61,12 @@ export const enum IpcEvents {
     DEVTOOLS_OPENED = "VCD_DEVTOOLS_OPENED",
     DEVTOOLS_CLOSED = "VCD_DEVTOOLS_CLOSED",
 
-    CHOOSE_USER_ASSET = "VCD_CHOOSE_USER_ASSET"
+    CHOOSE_USER_ASSET = "VCD_CHOOSE_USER_ASSET",
+
+    GROK_BOT_STATUS = "VCD_GROK_BOT_STATUS",
+    GROK_BOT_REGENERATE_TOKEN = "VCD_GROK_BOT_REGENERATE_TOKEN",
+    GROK_CHAT = "VCD_GROK_CHAT",
+    GROK_CHAT_TEST = "VCD_GROK_CHAT_TEST"
 }
 
 export const enum UpdaterIpcEvents {
@@ -82,5 +87,7 @@ export const enum IpcCommands {
 
     GET_LANGUAGES = "navigator.languages",
 
-    SCREEN_SHARE_PICKER = "screenshare:picker"
+    SCREEN_SHARE_PICKER = "screenshare:picker",
+
+    GROK_DISCORD = "grok:discord"
 }

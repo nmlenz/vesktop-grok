@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { DefaultGrokBotSettings } from "./grokBot";
 import { Settings } from "./settings";
 
 export const DefaultVesktopSettings: Settings = {
@@ -29,5 +30,6 @@ export const DefaultVesktopSettings: Settings = {
     splashPixelated: false,
     webRTCIPHandlingPolicy: "default",
     appBadge: true,
-    transparencyOption: "none"
+    transparencyOption: "none",
+    grokBot: DefaultGrokBotSettings
 };

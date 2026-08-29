@@ -6,6 +6,8 @@
 
 import type { Rectangle } from "electron";
 
+import type { GrokBotSettings } from "./grokBot";
+
 export interface Settings {
     discordBranch: "stable" | "canary" | "ptb";
     transparencyOption: "none" | "mica" | "tabbed" | "acrylic";
@@ -53,6 +55,8 @@ export interface Settings {
         onlySpeakers?: boolean;
         onlyDefaultSpeakers?: boolean;
     };
+
+    grokBot: GrokBotSettings;
 }
 
 export interface State {

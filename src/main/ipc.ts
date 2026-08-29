@@ -23,9 +23,11 @@ import { readFile, stat } from "fs/promises";
 import { release } from "os";
 import { join } from "path";
 
+import { GrokChatRequest } from "../shared/grokBot";
 import { IpcEvents } from "../shared/IpcEvents";
 import { setBadgeCount } from "./appBadge";
 import { autoStart } from "./autoStart";
+import { connectorStatus, grokChat, regenerateConnectorToken, testGrokConnection } from "./grokBot";
 import { enableHardwareAcceleration } from "./main";
 import { mainWin } from "./mainWindow";
 import { Settings, State } from "./settings";
@@ -72,6 +74,11 @@ handle(IpcEvents.DISABLE_AUTOSTART, autoStart.disable);
 handle(IpcEvents.SET_SETTINGS, (_, settings: typeof Settings.store, path?: string) => {
     Settings.setData(settings, path);
 });
+
+handle(IpcEvents.GROK_BOT_STATUS, () => connectorStatus());
+handle(IpcEvents.GROK_BOT_REGENERATE_TOKEN, () => regenerateConnectorToken());
+handle(IpcEvents.GROK_CHAT, (_, request: GrokChatRequest) => grokChat(request?.messages ?? [], request?.model));
+handle(IpcEvents.GROK_CHAT_TEST, () => testGrokConnection());
 
 handle(IpcEvents.RELAUNCH, async () => {
     const options: RelaunchOptions = {
