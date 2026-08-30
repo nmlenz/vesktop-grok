@@ -67,7 +67,16 @@ export interface GrokBotStatus {
 }
 
 export type DiscordBridgeOp =
-    "status" | "listGuilds" | "listChannels" | "readMessages" | "sendMessage" | "searchGuilds";
+    | "status"
+    | "listGuilds"
+    | "listChannels"
+    | "listDms"
+    | "readMessages"
+    | "sendMessage"
+    | "searchGuilds"
+    | "searchMessages"
+    | "findUsers"
+    | "getReactions";
 
 export interface DiscordBridgeRequest {
     op: DiscordBridgeOp;
@@ -77,6 +86,15 @@ export interface DiscordBridgeRequest {
     limit?: number;
     content?: string;
     replyTo?: string;
+    before?: string;
+    after?: string;
+    around?: string;
+    authorIds?: string[];
+    mentionIds?: string[];
+    messageId?: string;
+    emoji?: string;
+    offset?: number;
+    includeBurst?: boolean;
 }
 
 export const GROK_CHAT_SYSTEM_PROMPT =

@@ -49,7 +49,7 @@ const TOOLS = [
     },
     {
         name: "discord_list_channels",
-        description: "List text channels in a Discord server.",
+        description: "List text channels in a Discord server (not DMs).",
         inputSchema: {
             type: "object",
             properties: {
@@ -60,15 +60,99 @@ const TOOLS = [
         }
     },
     {
-        name: "discord_read_messages",
-        description: "Read recent messages in a Discord channel the user can see.",
+        name: "discord_list_dms",
+        description:
+            "List DM and group-DM channels visible to the signed-in Vesktop user, including recipient user ids/names.",
+        inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    },
+    {
+        name: "discord_find_users",
+        description:
+            "Resolve people by username, display name, or id from DMs, the user cache, and optionally a server member search.",
         inputSchema: {
             type: "object",
             properties: {
-                channelId: { type: "string", description: "Discord channel snowflake." },
-                limit: { type: "integer", minimum: 1, maximum: 100, description: "How many messages (default 25)." }
+                query: { type: "string", description: "Name, display name, or user snowflake." },
+                guildId: { type: "string", description: "Optional server to search members in." }
+            },
+            required: ["query"],
+            additionalProperties: false
+        }
+    },
+    {
+        name: "discord_read_messages",
+        description:
+            "Read messages in a server channel or DM. Each call returns at most 100 messages. Pass nextBefore as before to walk older history. authorIds filters the fetched page (still pages the full channel; use search for sparse authors).",
+        inputSchema: {
+            type: "object",
+            properties: {
+                channelId: { type: "string", description: "Channel or DM snowflake." },
+                limit: { type: "integer", minimum: 1, maximum: 100, description: "How many messages (default 25)." },
+                before: { type: "string", description: "Oldest-id cursor: messages older than this snowflake." },
+                after: { type: "string", description: "Messages newer than this snowflake." },
+                around: { type: "string", description: "Messages around this snowflake." },
+                authorIds: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Only keep messages from these user snowflakes in this page."
+                }
             },
             required: ["channelId"],
+            additionalProperties: false
+        }
+    },
+    {
+        name: "discord_search_messages",
+        description:
+            "Search a server or a DM for messages by authors, mentions, and/or text. Better than paging when analyzing a few specific people. Search results do not include reaction users — call discord_get_reactions on hits that matter.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                guildId: { type: "string", description: "Server snowflake. Required unless channelId is a DM." },
+                channelId: {
+                    type: "string",
+                    description: "Limit to this channel, or search inside a DM when guildId is omitted."
+                },
+                authorIds: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Authors to include (max 100). Use for 2–3 people you want to compare."
+                },
+                mentionIds: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Messages that mention these users."
+                },
+                content: { type: "string", description: "Text query." },
+                limit: { type: "integer", minimum: 1, maximum: 25, description: "Hits per page (default 25)." },
+                offset: { type: "integer", minimum: 0, maximum: 9975, description: "Search page offset." }
+            },
+            additionalProperties: false
+        }
+    },
+    {
+        name: "discord_get_reactions",
+        description:
+            "Who reacted to a message, and with which emoji. Omit emoji to fetch every reaction on the message. Unicode emoji or custom name:id. Includes normal and super (burst) reactions unless includeBurst is false.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                channelId: { type: "string", description: "Channel or DM snowflake." },
+                messageId: { type: "string", description: "Message snowflake." },
+                emoji: {
+                    type: "string",
+                    description: "Optional. Unicode (👍) or custom name:id. Also accepts <:name:id> / <a:name:id>."
+                },
+                limit: {
+                    type: "integer",
+                    minimum: 1,
+                    maximum: 100,
+                    description: "Users per emoji (default 100)."
+                },
+                after: { type: "string", description: "User-id cursor for more reactors on one emoji." },
+                includeBurst: { type: "boolean", description: "Include super reactions (default true)." }
+            },
+            required: ["channelId", "messageId"],
             additionalProperties: false
         }
     },
@@ -281,12 +365,51 @@ async function callTool(name: string, args: Record<string, any>) {
                 return toolText(await discord({ op: "searchGuilds", query: String(args.query || "") }));
             case "discord_list_channels":
                 return toolText(await discord({ op: "listChannels", guildId: String(args.guildId || "") }));
+            case "discord_list_dms":
+                return toolText(await discord({ op: "listDms" }));
+            case "discord_find_users":
+                return toolText(
+                    await discord({
+                        op: "findUsers",
+                        query: String(args.query || ""),
+                        guildId: args.guildId ? String(args.guildId) : undefined
+                    })
+                );
             case "discord_read_messages":
                 return toolText(
                     await discord({
                         op: "readMessages",
                         channelId: String(args.channelId || ""),
-                        limit: Number(args.limit) || 25
+                        limit: Number(args.limit) || 25,
+                        before: optionalString(args.before),
+                        after: optionalString(args.after),
+                        around: optionalString(args.around),
+                        authorIds: stringList(args.authorIds)
+                    })
+                );
+            case "discord_search_messages":
+                return toolText(
+                    await discord({
+                        op: "searchMessages",
+                        guildId: optionalString(args.guildId),
+                        channelId: optionalString(args.channelId),
+                        authorIds: stringList(args.authorIds),
+                        mentionIds: stringList(args.mentionIds),
+                        content: optionalString(args.content),
+                        limit: Number(args.limit) || 25,
+                        offset: Number(args.offset) || 0
+                    })
+                );
+            case "discord_get_reactions":
+                return toolText(
+                    await discord({
+                        op: "getReactions",
+                        channelId: String(args.channelId || ""),
+                        messageId: String(args.messageId || ""),
+                        emoji: optionalString(args.emoji),
+                        limit: Number(args.limit) || 100,
+                        after: optionalString(args.after),
+                        includeBurst: args.includeBurst !== false
                     })
                 );
             case "discord_send_message": {
@@ -317,6 +440,23 @@ async function callTool(name: string, args: Record<string, any>) {
 
 async function discord(request: DiscordBridgeRequest) {
     return sendRendererCommand(IpcCommands.GROK_DISCORD, request);
+}
+
+function optionalString(value: unknown) {
+    if (value == null) return undefined;
+    const text = String(value).trim();
+    return text.length ? text : undefined;
+}
+
+function stringList(value: unknown) {
+    if (value == null || value === "") return undefined;
+    const items = Array.isArray(value)
+        ? value.map(v => String(v).trim())
+        : String(value)
+              .split(",")
+              .map(v => v.trim());
+    const list = items.filter(Boolean);
+    return list.length ? list : undefined;
 }
 
 function toolText(payload: unknown, isError = false) {

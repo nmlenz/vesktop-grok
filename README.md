@@ -34,12 +34,20 @@ Tools exposed to Grok Bot:
 
 | Tool | What it does |
 | --- | --- |
-| `discord_status` | Signed-in user and the selected guild/channel |
+| `discord_status` | Signed-in user and the selected guild/channel or DM |
 | `discord_list_guilds` | Servers you are in |
 | `discord_search_guilds` | Filter servers by name |
 | `discord_list_channels` | Text channels in a server |
-| `discord_read_messages` | Recent messages in a channel |
+| `discord_list_dms` | DMs and group DMs, with recipient ids/names |
+| `discord_find_users` | Resolve a name or id from DMs, cache, or a server |
+| `discord_read_messages` | Page a channel/DM (max 100 per call). `before` walks older history; `authorIds` filters that page |
+| `discord_search_messages` | Search a server or DM by authors, mentions, and text |
+| `discord_get_reactions` | Emoji on a message plus each user who reacted (normal and super) |
 | `discord_send_message` | Send as you (requires Allow send) |
+
+`discord_read_messages` returns `nextBefore`. Pass that as `before` to keep walking back. Discord will keep serving history as far as this account can see in that channel or DM. Each page is at most 100 messages.
+
+To compare two or three people: `discord_find_users` → `discord_search_messages` with their `authorIds` (server or DM), or page a DM/channel with `authorIds` + `before`. Reaction summaries come back on each read; use `discord_get_reactions` when you need **which user used which emoji**. Search hits do not include reactors.
 
 There is also `GET /health` and `POST /api/tools/<name>` for a plain HTTP client (local exec / curl).
 
